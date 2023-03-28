@@ -4,7 +4,7 @@ import sys
 import argparse
 from pathlib import Path
 
-import webscraper
+from webscraper import WebScraper
 import image_processor
 
 def confirm_prompt(question: str) -> bool:
@@ -45,7 +45,7 @@ def main ():
 
     args = parser.parse_args()
     
-    # Ensure path is correct
+    # Ensure path is exists and is a directory
     check_path(Path(args.path))
 
     print(f'About to scrape {args.num} images of \"{args.subject}\". Files will be stored at: {Path(args.path).resolve()}')
