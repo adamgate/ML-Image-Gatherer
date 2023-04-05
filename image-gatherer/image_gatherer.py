@@ -4,8 +4,8 @@ import sys
 import argparse
 from pathlib import Path
 
-from webscraper import WebScraper
-import image_processor
+from webscraper import fetch_images
+from image_processor import process_images
 
 def confirm_prompt(question: str) -> bool:
     reply = None
@@ -13,12 +13,14 @@ def confirm_prompt(question: str) -> bool:
         reply = input(f"{question} (y/n): ").casefold()
     return (reply == "y" or reply == "1")
 
+
 def check_path(path: Path):
     if not path.exists():
         sys.exit('Provided path doesn\'t exist.')
 
     if not path.is_dir():
         sys.exit('Provided path is not a directory.')
+
 
 def main ():
     parser = argparse.ArgumentParser(description='Scrapes images from the web and prepares them for training ML algorithms')
@@ -41,7 +43,8 @@ def main ():
                         '--path',
                         type=str,
                         help='The path where the images will be saved.',
-                        metavar='[path]')
+                        metavar='[path]',
+                        default='downloads')
 
     args = parser.parse_args()
     
@@ -49,7 +52,12 @@ def main ():
     check_path(Path(args.path))
 
     print(f'About to scrape {args.num} images of \"{args.subject}\". Files will be stored at: {Path(args.path).resolve()}')
-    proceed = confirm_prompt("Proceed?")
+    if not confirm_prompt("Proceed?"):
+        sys.exit('Closing image_gather...')
+
+    # Let the webscraper do its thing
+    fetch_images(args.subject, args.num, args.path)
+
 
 if __name__ == '__main__':
     main()
