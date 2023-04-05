@@ -4,8 +4,8 @@ import sys
 import argparse
 from pathlib import Path
 
-from webscraper import fetch_images
-from image_processor import process_images
+import webscraper
+import image_processor
 
 def confirm_prompt(question: str) -> bool:
     reply = None
@@ -15,10 +15,14 @@ def confirm_prompt(question: str) -> bool:
 
 
 def check_path(path: Path):
-    if not path.exists():
+    if not path.exists() and path == Path('downloads'):
+        path.mkdir(parents=True, exist_ok=True)
+        print("Created default path.")
+
+    elif not path.exists():
         sys.exit('Provided path doesn\'t exist.')
 
-    if not path.is_dir():
+    elif not path.is_dir():
         sys.exit('Provided path is not a directory.')
 
 
@@ -35,7 +39,7 @@ def main ():
                         '--num',
                         type=int, 
                         help='The number of images to fetch, from 1-1000. Defaults to 10.', 
-                        choices=range(1,1000),
+                        choices=range(1,101),
                         metavar='[1-1000]', 
                         default=10)
     
@@ -56,7 +60,8 @@ def main ():
         sys.exit('Closing image_gather...')
 
     # Let the webscraper do its thing
-    fetch_images(args.subject, args.num, args.path)
+    image_links = webscraper.fetch_images(args.subject, args.num)
+    webscraper.save_images(image_links, args.subject, args.path)
 
 
 if __name__ == '__main__':
