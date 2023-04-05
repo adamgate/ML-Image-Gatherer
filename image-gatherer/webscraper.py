@@ -31,7 +31,7 @@ def fetch_images(subject: str, num: int, path: Path):
     # search for the subject in search bar
     driver.find_element(By.NAME, 'q').send_keys(subject)
     time.sleep(3)
-    driver.find_element(By.CLASS_NAME, 'Tg7LZd').send_keys(Keys.Enter)
+    driver.find_element(By.CLASS_NAME, 'Tg7LZd').send_keys(Keys.ENTER)
     time.sleep(3)
-    
+
     driver.close()
