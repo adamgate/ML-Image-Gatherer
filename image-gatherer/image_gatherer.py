@@ -1,3 +1,10 @@
+##################################################################
+# An assistant for training image classification ML models.
+# Gathers images from the web and prepares them for consumption.
+#
+# Author: Adam Applegate
+##################################################################
+
 import sys
 import argparse
 from pathlib import Path
@@ -14,7 +21,7 @@ def confirm_prompt(question: str) -> bool:
     return (reply == "y" or reply == "1")
 
 def sanitize_query(subject: str):
-    """ Strips illegal chars from subject, """
+    """ Strips illegal chars from subject. """
 
     invalid_chars = '<>:"/\\|?*'
     for char in invalid_chars:

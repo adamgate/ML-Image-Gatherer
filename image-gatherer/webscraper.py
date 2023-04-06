@@ -1,3 +1,9 @@
+######################################################
+# Scrapes images from google images based on a query
+#
+# Author: Adam Applegate
+######################################################
+
 from pathlib import Path
 import configparser
 import time
