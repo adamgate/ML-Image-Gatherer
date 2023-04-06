@@ -1,7 +1,6 @@
 from pathlib import Path
 import configparser
 import time
-import base64
 
 from PIL import Image
 import io
@@ -26,7 +25,7 @@ def fetch_images(subject: str, num: int):
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-sh-usage')
-    options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
+    options.add_argument('--log-level=3')
     driver = webdriver.Chrome(config['DEFAULT']['CHROMEDRIVER_PATH'], options=options)
 
     # load google
