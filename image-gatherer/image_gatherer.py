@@ -11,21 +11,17 @@ def confirm_prompt(question: str) -> bool:
         reply = input(f"{question} (y/n): ").casefold()
     return (reply == "y" or reply == "1")
 
-
 def sanitize_query(subject: str):
     """ Strip illegal chars from subject """
+
     invalid_chars = '<>:"/\\|?*'
     for char in invalid_chars:
         subject = subject.replace(char, '')
+
+    return subject
 
 def create_dir(path: Path, subject: str):
     """ Creates a directory with the name of the query for storage of the images. """
-
-    # strip any illegal chars from subject
-    invalid_chars = '<>:"/\\|?*'
-    for char in invalid_chars:
-        subject = subject.replace(char, '')
-
     subject = subject.replace(" ", "_")
 
     path = path.joinpath(subject)
@@ -75,20 +71,23 @@ def main ():
                         default='downloads')
 
     args = parser.parse_args()
+    subject = args.subject
+    num = args.num
+    path = args.path
     
-    # Ensure path is exists and is a directory
-    check_path(Path(args.path))
+    check_path(Path(path))
+    subject = sanitize_query(subject)
 
-    print(f'About to scrape {args.num} images of \"{args.subject}\". Files will be stored at: {Path(args.path).resolve()}')
+    print(f'About to scrape {num} images of \"{subject}\". Files will be stored at: {Path(path).resolve()}')
     if not confirm_prompt("Proceed?"):
         sys.exit('Closing image_gather...')
     
     # Create subdirectory for stored images
-    path = create_dir(Path(args.path), args.subject)
+    path = create_dir(Path(path), subject)
 
     # Let the webscraper do its thing
-    image_links = webscraper.fetch_images(args.subject, args.num)
-    webscraper.save_images(image_links, args.subject, args.path)
+    image_links = webscraper.fetch_images(subject, num)
+    webscraper.save_images(image_links, subject, path)
 
 
 if __name__ == '__main__':
