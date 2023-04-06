@@ -1,5 +1,3 @@
-# Entry point for the program
-
 import sys
 import argparse
 from pathlib import Path
@@ -14,7 +12,32 @@ def confirm_prompt(question: str) -> bool:
     return (reply == "y" or reply == "1")
 
 
+def sanitize_query(subject: str):
+    """ Strip illegal chars from subject """
+    invalid_chars = '<>:"/\\|?*'
+    for char in invalid_chars:
+        subject = subject.replace(char, '')
+
+def create_dir(path: Path, subject: str):
+    """ Creates a directory with the name of the query for storage of the images. """
+
+    # strip any illegal chars from subject
+    invalid_chars = '<>:"/\\|?*'
+    for char in invalid_chars:
+        subject = subject.replace(char, '')
+
+    subject = subject.replace(" ", "_")
+
+    path = path.joinpath(subject)
+
+    if not path.exists():
+        path.mkdir(parents=True, exist_ok=True)
+    
+    return path
+        
+
 def check_path(path: Path):
+    """ Ensures the provided path is valid, or creates the default path if no path was provided. """
     if not path.exists() and path == Path('downloads'):
         path.mkdir(parents=True, exist_ok=True)
         print("Created default path.")
@@ -27,6 +50,7 @@ def check_path(path: Path):
 
 
 def main ():
+    """ Entry point for the program. """
     parser = argparse.ArgumentParser(description='Scrapes images from the web and prepares them for training ML algorithms')
 
     parser.add_argument('-s',
@@ -58,6 +82,9 @@ def main ():
     print(f'About to scrape {args.num} images of \"{args.subject}\". Files will be stored at: {Path(args.path).resolve()}')
     if not confirm_prompt("Proceed?"):
         sys.exit('Closing image_gather...')
+    
+    # Create subdirectory for stored images
+    path = create_dir(Path(args.path), args.subject)
 
     # Let the webscraper do its thing
     image_links = webscraper.fetch_images(args.subject, args.num)
