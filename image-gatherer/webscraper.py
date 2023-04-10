@@ -21,14 +21,14 @@ config = configparser.ConfigParser()
 config.read_file(open(config_file + '/env.cfg', 'r'))
 
 
-def fetch_images(subject: str, num: int):
-    """ Fetches <num> image links from google images based on a provided subject. """
+def fetch_images(query: str, num: int):
+    """ Fetches <num> image links from google images based on a provided query. """
 
-    URL = f"https://www.google.com/search?site=&tbm=isch&source=hp&biw=1873&bih=990&q={subject}"
+    URL = f"https://www.google.com/search?site=&tbm=isch&source=hp&biw=1873&bih=990&q={query}"
 
     # Configure selenium chrome webdriver
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
+    options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-sh-usage')
     options.add_argument('--log-level=3')
@@ -83,17 +83,17 @@ def fetch_images(subject: str, num: int):
         if count == num:
             break
 
-    driver.close()
+    driver.quit()
     
     return fullsize_images
 
 
-def save_images(image_links,  subject: str, path: Path):
+def save_images(image_links,  query: str, path: Path):
     """ Loads image links into images and saves them to the provided path.  """
 
     count = 0
     for link in image_links:
-        img_path = f"{path}/{subject}{count+1}.jpg"
+        img_path = f"{path}/{query}{count+1}.jpg"
 
         try:
             image_content = requests.get(link).content
