@@ -24,7 +24,7 @@ Here's an example of how to use the app.
 If you wish to get images to train a ML model to differentiate between cats and dogs, here's what to do:
 
 1. Get 100 images of cats: `py image-gatherer/image_gatherer.py scrape --query cat --num 100`
-2. Get 100 images of dogs: `py image-gatherer/image_gatherer.py scrape --qquery dog --num 100`
+2. Get 100 images of dogs: `py image-gatherer/image_gatherer.py scrape --query dog --num 100`
 3. Prepare images for consumption (this portion of the app is still in progress)
 
 Run `py image-gatherer/image_gatherer.py -h` to get a list of all possible commands.
