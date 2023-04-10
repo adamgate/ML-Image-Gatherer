@@ -60,16 +60,17 @@ def main ():
     """ Entry point for the program. """
 
     parser = argparse.ArgumentParser(description='Scrapes images from the web and prepares them for training ML algorithms')
+    subparsers = parser.add_subparsers()
 
     # webscraper commands
-    webscraper_group = parser.add_argument_group('webscraper', "Scrape images from the web")
-    webscraper_group.add_argument('-s',
+    webscraper_parser = subparsers.add_parser('scrape', help="Scrape images from the web")
+    webscraper_parser.add_argument('-s',
                         '--subject',
                         type=str,
                         help='The subject of the images to be scraped.',
                         metavar='[subject]')
 
-    webscraper_group.add_argument('-n',
+    webscraper_parser.add_argument('-n',
                         '--num',
                         type=int, 
                         help='The number of images to fetch, from 1-1000. Defaults to 10.', 
@@ -77,7 +78,7 @@ def main ():
                         metavar='[1-1000]', 
                         default=10)
     
-    webscraper_group.add_argument('-p',
+    webscraper_parser.add_argument('-p',
                         '--path',
                         type=Path,
                         help='The path where the images will be saved.',
@@ -85,8 +86,8 @@ def main ():
                         default='downloads')
     
     # image processor commands
-    img_processor_group = parser.add_argument_group('image processor', 'Process scraped images for better ML consumption')
-    img_processor_group.add_argument('-t',
+    img_processor_parser = subparsers.add_parser('process', help='Process scraped images for better ML consumption')
+    img_processor_parser.add_argument('-t',
                         '--test',
                         type=str,
                         help='Test command..')
