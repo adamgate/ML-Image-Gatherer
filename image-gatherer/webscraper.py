@@ -71,7 +71,7 @@ def fetch_images(subject: str, num: int):
         thumbnail.click()
         time.sleep(1)
 
-        full_image = driver.find_element(By.CLASS_NAME, 'n3VNCb')
+        full_image = driver.find_element(By.CLASS_NAME, 'r48jcc')
         if full_image.get_attribute('src') and 'http' in full_image.get_attribute('src'):
             fullsize_images.append(full_image.get_attribute('src'))
             print(f"Loaded image #{count+1} of {num}: {full_image.get_attribute('src')}")
