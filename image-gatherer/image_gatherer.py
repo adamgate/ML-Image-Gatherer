@@ -50,7 +50,7 @@ def check_path(path: Path):
         print("Created default path.")
 
     elif not path.exists():
-        sys.exit('Provided path doesn\'t exist.')
+        sys.exit(f'Provided path \"{path}\" doesn\'t exist.')
 
     elif not path.is_dir():
         sys.exit('Provided path is not a directory.')
@@ -74,13 +74,13 @@ def main ():
                         '--num',
                         type=int, 
                         help='The number of images to fetch, from 1-1000. Defaults to 10.', 
-                        choices=range(1,101),
-                        metavar='[1-1000]', 
+                        choices=range(1,401),
+                        metavar='[1-400]', 
                         default=10)
     
     webscraper_parser.add_argument('-p',
                         '--path',
-                        type=Path,
+                        type=str,
                         help='The path where the images will be saved.',
                         metavar='[path]',
                         default='downloads')
@@ -95,8 +95,9 @@ def main ():
     args = parser.parse_args()
     query = args.query
     num = args.num
-    path = args.path
-    
+    #Strip unwanted characters from path
+    path = Path(args.path.strip("\\").strip("\""))
+
     check_path(path)
     query = sanitize_query(query)
 
