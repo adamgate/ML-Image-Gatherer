@@ -21,14 +21,17 @@ config = configparser.ConfigParser()
 config.read_file(open(config_file + '/env.cfg', 'r'))
 
 
-def fetch_images(query: str, num: int):
+def fetch_images(query: str, num: int, headless: bool):
     """ Fetches <num> image links from google images based on a provided query. """
 
     URL = f"https://www.google.com/search?site=&tbm=isch&source=hp&biw=1873&bih=990&q={query}"
 
     # Configure selenium chrome webdriver
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless=new')
+
+    print(headless)
+    if (headless == True):
+        options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-sh-usage')
     options.add_argument('--log-level=3')

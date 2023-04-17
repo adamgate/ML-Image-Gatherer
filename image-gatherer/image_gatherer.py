@@ -61,6 +61,10 @@ def scrape(args):
     query = args.query
     num = args.num
     path = Path(args.path.strip("\\").strip("\"")) #Strip unwanted characters from path
+    headless = None
+
+    if args.no_headless is None:
+        headless = True
 
     check_path(path)
     query = sanitize_query(query)
@@ -73,7 +77,7 @@ def scrape(args):
     path = create_dir(path, query)
 
     # Let the webscraper do its thing
-    image_links = webscraper.fetch_images(query, num)
+    image_links = webscraper.fetch_images(query, num, headless)
     webscraper.save_images(image_links, query, path)
 
 def process(args):
@@ -90,35 +94,41 @@ def main ():
     # webscraper commands
     webscraper_parser = subparsers.add_parser('scrape', help="Scrape images from the web")
     webscraper_parser.add_argument('-q',
-                        '--query',
-                        type=str,
-                        help='The query of the images to be scraped.',
-                        metavar='[query]')
+                                    '--query',
+                                    type=str,
+                                    help='The query of the images to be scraped.',
+                                    metavar='[query]')
 
     webscraper_parser.add_argument('-n',
-                        '--num',
-                        type=int, 
-                        help='The number of images to fetch, from 1-400. Defaults to 10.', 
-                        choices=range(1,401),
-                        metavar='[1-400]', 
-                        default=10)
+                                    '--num',
+                                    type=int, 
+                                    help='The number of images to fetch, from 1-400. Defaults to 10.', 
+                                    choices=range(1,401),
+                                    metavar='[1-400]', 
+                                    default=10)
     
     webscraper_parser.add_argument('-p',
-                        '--path',
-                        type=str,
-                        help='The path where the images will be saved.',
-                        metavar='[path]',
-                        default='downloads')
+                                    '--path',
+                                    type=str,
+                                    help='The path where the images will be saved.',
+                                    metavar='[path]',
+                                    default='downloads')
     
+    webscraper_parser.add_argument('-nh',
+                                    '--no-headless',
+                                    action=argparse.BooleanOptionalAction,
+                                    help='The mode the scraper runs in. Headless or real. Defaults to headless.')
+        
     # image processor commands
     img_processor_parser = subparsers.add_parser('process', help='Process scraped images for better ML consumption.')
     img_processor_parser.add_argument('-t',
-                        '--test',
-                        type=str,
-                        help='Test command..')
+                                      '--test',
+                                      type=str,
+                                      help='Test command..')
     
     args = parser.parse_args()
 
+    # Main decision tree
     if (args.command == 'scrape'):
         scrape(args)
     elif (args.command == 'process'):
