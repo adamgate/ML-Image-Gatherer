@@ -55,48 +55,12 @@ def check_path(path: Path):
     elif not path.is_dir():
         sys.exit('Provided path is not a directory.')
 
+def scrape(args):
+    """ Handles webscraper subparser logic """
 
-def main ():
-    """ Entry point for the program. """
-
-    parser = argparse.ArgumentParser(description='Scrapes images from the web and prepares them for training ML algorithms')
-    subparsers = parser.add_subparsers()
-
-    # webscraper commands
-    webscraper_parser = subparsers.add_parser('scrape', help="Scrape images from the web")
-    webscraper_parser.add_argument('-q',
-                        '--query',
-                        type=str,
-                        help='The query of the images to be scraped.',
-                        metavar='[query]') 
-
-    webscraper_parser.add_argument('-n',
-                        '--num',
-                        type=int, 
-                        help='The number of images to fetch, from 1-1000. Defaults to 10.', 
-                        choices=range(1,401),
-                        metavar='[1-400]', 
-                        default=10)
-    
-    webscraper_parser.add_argument('-p',
-                        '--path',
-                        type=str,
-                        help='The path where the images will be saved.',
-                        metavar='[path]',
-                        default='downloads')
-    
-    # image processor commands
-    img_processor_parser = subparsers.add_parser('process', help='Process scraped images for better ML consumption')
-    img_processor_parser.add_argument('-t',
-                        '--test',
-                        type=str,
-                        help='Test command..')
-    
-    args = parser.parse_args()
     query = args.query
     num = args.num
-    #Strip unwanted characters from path
-    path = Path(args.path.strip("\\").strip("\""))
+    path = Path(args.path.strip("\\").strip("\"")) #Strip unwanted characters from path
 
     check_path(path)
     query = sanitize_query(query)
@@ -112,6 +76,53 @@ def main ():
     image_links = webscraper.fetch_images(query, num)
     webscraper.save_images(image_links, query, path)
 
+def process(args):
+     """ Handles image processor subparser logic """
+     image_processor.process_images()
+
+
+def main ():
+    """ Entry point for the program. """
+
+    parser = argparse.ArgumentParser(description='Scrapes images from the web and prepares them for training ML algorithms')
+    subparsers = parser.add_subparsers(dest='command')
+
+    # webscraper commands
+    webscraper_parser = subparsers.add_parser('scrape', help="Scrape images from the web")
+    webscraper_parser.add_argument('-q',
+                        '--query',
+                        type=str,
+                        help='The query of the images to be scraped.',
+                        metavar='[query]')
+
+    webscraper_parser.add_argument('-n',
+                        '--num',
+                        type=int, 
+                        help='The number of images to fetch, from 1-400. Defaults to 10.', 
+                        choices=range(1,401),
+                        metavar='[1-400]', 
+                        default=10)
+    
+    webscraper_parser.add_argument('-p',
+                        '--path',
+                        type=str,
+                        help='The path where the images will be saved.',
+                        metavar='[path]',
+                        default='downloads')
+    
+    # image processor commands
+    img_processor_parser = subparsers.add_parser('process', help='Process scraped images for better ML consumption.')
+    img_processor_parser.add_argument('-t',
+                        '--test',
+                        type=str,
+                        help='Test command..')
+    
+    args = parser.parse_args()
+
+    if (args.command == 'scrape'):
+        scrape(args)
+    elif (args.command == 'process'):
+        process(args)
 
 if __name__ == '__main__':
     main()
