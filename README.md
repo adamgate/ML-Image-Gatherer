@@ -21,10 +21,29 @@ That should be all you need to do to get the program up and running.
 ## Usage
 Here's an example of how to use the app.
 
+**There are 2 main ways to scrape images from the web. The first way is through individual queries, as shown below.**
+
 If you wish to get images to train a ML model to differentiate between cats and dogs, here's what to do:
 
-1. Get 100 images of cats: `py image-gatherer/image_gatherer.py scrape --query cat --num 100`
-2. Get 100 images of dogs: `py image-gatherer/image_gatherer.py scrape --query dog --num 100`
-3. Prepare images for consumption (this portion of the app is still in progress)
+1. Navigate to the root folder of the application in your terminal.
+2. To get 100 images of cats, run the following command: `py image_gatherer.py scrape --query cat --num 100`
+3. Get 100 images of dogs: `py image_gatherer.py scrape --query dog --num 100`
 
-Run `py image-gatherer/image_gatherer.py -h` to get a list of all possible commands.
+**The second method is running a batch of queries from a file.**
+
+Here are the steps:
+
+1. Create a txt file with a different query on each line, like so:
+
+```
+dog
+cat
+[put as many queries as you want here]
+```
+
+2. Feed the query file into the `--batch` command: `py image-gatherer.py scrape --batch queries.txt --num 100`. This will get 100 images of each item in the queries file, so 100 dog and 100 cat images in this case.
+
+**Other Commands**
+- The `--path` argument will determine where the scraped images are saved.
+- Adding the `--no-headless` flag to the scrape command can increase the number of images found by the tool.
+- Run `py image_gatherer.py --help` to get a list of all possible commands and options.
