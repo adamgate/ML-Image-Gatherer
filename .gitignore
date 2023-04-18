@@ -2,3 +2,5 @@ env/
 **/__pycache__
 env.cfg
 downloads/
+*.txt
+!requirements.txt
