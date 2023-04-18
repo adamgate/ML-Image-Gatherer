@@ -81,12 +81,8 @@ def scrape(args):
     query = args.query
     num = args.num
     path = Path(args.path.strip("\\").strip("\"")) #Strip unwanted characters from path
-    headless = None
-
+    headless = args.headless
     check_path(path)
-    
-    if args.no_headless is None:
-        headless = True
 
     # batch file, need multiple queries
     if args.batch is not None:
@@ -163,10 +159,10 @@ def main ():
                                     metavar='[path]',
                                     default='downloads')
     
-    webscraper_parser.add_argument('-nh',
-                                    '--no-headless',
+    webscraper_parser.add_argument('--headless',
                                     action=argparse.BooleanOptionalAction,
-                                    help='The mode the scraper runs in. Headless or real. Defaults to headless.')
+                                    help='The mode the scraper runs in. Headless or real. Defaults to headless.',
+                                    default=True)
         
     # image processor commands
     img_processor_parser = subparsers.add_parser('process', help='Process scraped images for better ML consumption.')
