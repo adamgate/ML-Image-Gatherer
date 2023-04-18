@@ -1,5 +1,7 @@
 # ML Image Gatherer
-A python CLI app that scrapes images from the web and prepares them for training an image classification machine learning algorithm.
+A python CLI app that scrapes images from the web and prepares them for training image classification machine learning algorithms.
+
+---
 
 ## Setup
 If you wish to run this yourself, follow the steps below:
@@ -18,6 +20,8 @@ CHROMEDRIVER_PATH = <PATH_TO_CHROME_WEBDRIVER_HERE>
 
 That should be all you need to do to get the program up and running.
 
+---
+
 ## Usage
 Here's an example of how to use the app.
 
@@ -27,7 +31,7 @@ If you wish to get images to train a ML model to differentiate between cats and 
 
 1. Navigate to the root folder of the application in your terminal.
 2. To get 100 images of cats, run the following command: `py image_gatherer.py scrape --query cat --num 100`
-3. Get 100 images of dogs: `py image_gatherer.py scrape --query dog --num 100`
+3. To get 100 images of dogs: `py image_gatherer.py scrape --query dog --num 100`
 
 **The second method is running a batch of queries from a file.**
 
@@ -38,10 +42,12 @@ Here are the steps:
 ```
 dog
 cat
-[put as many queries as you want here]
+<put as many queries as you want here>
 ```
 
 2. Feed the query file into the `--batch` command: `py image-gatherer.py scrape --batch queries.txt --num 100`. This will get 100 images of each item in the queries file, so 100 dog and 100 cat images in this case.
+
+*Once you have your images, make sure you verify you want to keep all of them. Then they're ready to be fed into your image classification algorithm.*
 
 **Other Commands**
 - The `--path` argument will determine where the scraped images are saved.
