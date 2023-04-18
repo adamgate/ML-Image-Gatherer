@@ -55,6 +55,26 @@ def check_path(path: Path):
     elif not path.is_dir():
         sys.exit('Provided path is not a directory.')
 
+def check_file(filepath: Path):
+    """ Ensures the provided file exists and is a txt file """
+
+    if not str(filepath).endswith('.txt'):
+        sys.exit("Batch file is not a txt file.")
+
+    if not Path(filepath).exists():
+        sys.exit(f'Provided file \"{filepath}\" doesn\'t exist.')
+
+def load_file(filepath: Path):
+    """ Loads each line of a txt file into an array """
+
+    queries = []
+    with open(filepath) as my_file:
+        for line in my_file:
+            queries.append(line)
+    
+    return queries
+
+
 def scrape(args):
     """ Handles webscraper subparser logic """
 
@@ -63,22 +83,44 @@ def scrape(args):
     path = Path(args.path.strip("\\").strip("\"")) #Strip unwanted characters from path
     headless = None
 
+    check_path(path)
+    
     if args.no_headless is None:
         headless = True
 
-    check_path(path)
-    query = sanitize_query(query)
+    # batch file, need multiple queries
+    if args.batch is not None:
+        check_file(args.batch)
+        queries = load_file(args.batch)
 
-    print(f'About to scrape {num} images of \"{query}\". Files will be stored at: {path.resolve()}')
-    if not confirm_prompt("Proceed?"):
-        sys.exit('Closing image_gather...')
-    
-    # Create subdirectory for stored images
-    path = create_dir(path, query)
+        print(f'About to scrape {len(queries)} queries from file: \"{args.batch}\". Files will be stored at: \"{path.resolve()}\"')
+        if not confirm_prompt("Proceed?"):
+            sys.exit('Closing image gatherer...')
 
-    # Let the webscraper do its thing
-    image_links = webscraper.fetch_images(query, num, headless)
-    webscraper.save_images(image_links, query, path)
+        for item in queries:
+            # Create subdirectory for stored images
+            item = sanitize_query(item)
+            new_path = create_dir(path, item)
+
+            # Let the webscraper do its thing
+            image_links = webscraper.fetch_images(item, num, headless)
+            webscraper.save_images(image_links, item, new_path)
+
+    # Do a single query if no batch file
+    else:
+        print(f'About to scrape {num} images of \"{query}\". Files will be stored at: {path.resolve()}')
+        if not confirm_prompt("Proceed?"):
+            sys.exit('Closing image gatherer...')
+
+        query = sanitize_query(query)
+
+        # Create subdirectory for stored images
+        path = create_dir(path, query)
+
+        # Let the webscraper do its thing
+        image_links = webscraper.fetch_images(query, num, headless)
+        webscraper.save_images(image_links, query, path)
+
 
 def process(args):
      """ Handles image processor subparser logic """
@@ -113,6 +155,12 @@ def main ():
                                     help='The path where the images will be saved.',
                                     metavar='[path]',
                                     default='downloads')
+    
+    webscraper_parser.add_argument('-b',
+                                   '--batch',
+                                   type=str,
+                                   help='Path to a txt file with a query on each line.',
+                                   metavar='[path to batch txt file]')
     
     webscraper_parser.add_argument('-nh',
                                     '--no-headless',

@@ -29,7 +29,6 @@ def fetch_images(query: str, num: int, headless: bool):
     # Configure selenium chrome webdriver
     options = webdriver.ChromeOptions()
 
-    print(headless)
     if (headless == True):
         options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
