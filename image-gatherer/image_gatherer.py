@@ -135,11 +135,18 @@ def main ():
 
     # webscraper commands
     webscraper_parser = subparsers.add_parser('scrape', help="Scrape images from the web")
-    webscraper_parser.add_argument('-q',
-                                    '--query',
-                                    type=str,
-                                    help='The query of the images to be scraped.',
-                                    metavar='[query]')
+    action = webscraper_parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('-q',
+                        '--query',
+                        type=str,
+                        help='The query of the images to be scraped.',
+                        metavar='[query]')
+    
+    action.add_argument('-b',
+                        '--batch',
+                        type=str,
+                        help='Path to a txt file with a query on each line.',
+                        metavar='[path to batch txt file]')
 
     webscraper_parser.add_argument('-n',
                                     '--num',
@@ -155,12 +162,6 @@ def main ():
                                     help='The path where the images will be saved.',
                                     metavar='[path]',
                                     default='downloads')
-    
-    webscraper_parser.add_argument('-b',
-                                   '--batch',
-                                   type=str,
-                                   help='Path to a txt file with a query on each line.',
-                                   metavar='[path to batch txt file]')
     
     webscraper_parser.add_argument('-nh',
                                     '--no-headless',
