@@ -27,7 +27,7 @@ def confirm_prompt(question: str) -> bool:
 
     reply = None
     while reply not in ("y", "n", "1", "2"):
-        reply = console.input(f"[yellow]{question} (y/n): ").casefold()
+        reply = console.input(f"[bold yellow]{question} (y/n): ").casefold()
     return (reply == "y" or reply == "1")
 
 def sanitize_query(query: str):
@@ -90,9 +90,9 @@ def scrape(args):
 
     query = args.query
     num = args.num
-    path = Path(args.path.strip("\\").strip("\"")) #Strip unwanted characters from path
-    headless = args.headless
-    debug = args.debug
+    path = Path(args.path.strip("\\").strip("\"")) # Strip unwanted characters from path
+    arg_options = [args.headless, args.debug] # optional flags
+
     check_path(path)
 
     # batch file, need multiple queries
@@ -110,7 +110,8 @@ def scrape(args):
             new_path = create_dir(path, item)
 
             # Let the webscraper do its thing
-            image_links = webscraper.fetch_images(item, num, headless)
+            driver = webscraper.initialize_webdriver(arg_options)
+            image_links = webscraper.fetch_images(item, num, driver)
             webscraper.save_images(image_links, item, new_path)
 
     # Do a single query if no batch file
@@ -119,13 +120,15 @@ def scrape(args):
         if not confirm_prompt("Proceed?"):
             close_app('Closing image gatherer...')
 
+
         query = sanitize_query(query)
 
         # Create subdirectory for stored images
         path = create_dir(path, query)
 
         # Let the webscraper do its thing
-        image_links = webscraper.fetch_images(query, num, [headless, debug])
+        driver = webscraper.initialize_webdriver(arg_options)
+        image_links = webscraper.fetch_images(query, num, driver)
         webscraper.save_images(image_links, query, path)
 
 

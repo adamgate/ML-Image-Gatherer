@@ -22,13 +22,9 @@ config_file = str(Path('.').parent.absolute())
 config = configparser.ConfigParser()
 config.read_file(open(config_file + '/env.cfg', 'r'))
 
+def initialize_webdriver(arg_options):
+    """ Initializes a selenium chrome webdriver with the provided options. """
 
-def fetch_images(query: str, num: int, arg_options):
-    """ Fetches a number of image links from google images based on a provided query. """
-
-    URL = f"https://www.google.com/search?site=&tbm=isch&source=hp&biw=1873&bih=990&q={query}"
-
-    # Configure selenium chrome webdriver
     options = webdriver.ChromeOptions()
 
     options.add_argument('--incognito')
@@ -36,9 +32,11 @@ def fetch_images(query: str, num: int, arg_options):
     options.add_argument('--mute-audio')
     options.add_argument('--disable-dev-shm-usage')
 
+    # headless flag
     if (arg_options[0] == True):
         options.add_argument('--headless')
 
+    # debug flag
     if (arg_options[1] == False):
         options.add_argument('--log-level=3')
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
@@ -46,8 +44,13 @@ def fetch_images(query: str, num: int, arg_options):
         options.add_argument('--log-level=1')
 
     driver = webdriver.Chrome(config['DEFAULT']['CHROMEDRIVER_PATH'], options=options)
-
     console.print("[green]Webdriver loaded successfully.")
+    return driver
+
+def fetch_images(query: str, num: int, driver):
+    """ Fetches a number of image links from google images based on a provided query. """
+
+    URL = f"https://www.google.com/search?site=&tbm=isch&source=hp&biw=1873&bih=990&q={query}"
 
     # load google
     driver.get(URL)
