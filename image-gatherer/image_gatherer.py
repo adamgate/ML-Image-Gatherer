@@ -155,7 +155,7 @@ def main ():
     webscraper_parser.add_argument('-p',
                                     '--path',
                                     type=str,
-                                    help='The path where the images will be saved.',
+                                    help='The path where the images will be saved. Defaults to ./downloads',
                                     metavar='[path]',
                                     default='downloads')
     

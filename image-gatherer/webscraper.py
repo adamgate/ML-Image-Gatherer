@@ -30,9 +30,11 @@ def fetch_images(query: str, num: int, headless: bool):
     options = webdriver.ChromeOptions()
 
     if (headless == True):
-        options.add_argument('--headless=new')
+        options.add_argument('--headless')
+    options.add_argument('--incognito')
     options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-sh-usage')
+    options.add_argument('--mute-audio')
+    options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--log-level=3')
     driver = webdriver.Chrome(config['DEFAULT']['CHROMEDRIVER_PATH'], options=options)
 
@@ -45,11 +47,13 @@ def fetch_images(query: str, num: int, headless: bool):
     last_height = driver.execute_script('return document.body.scrollHeight')
     while True:
         driver.execute_script('window.scrollTo(0,document.body.scrollHeight)')
-        time.sleep(.5)
+
+        # If it isn't loading many images, increase this number
+        # time.sleep(1)
 
         new_height = driver.execute_script('return document.body.scrollHeight')
 
-        # click on "Show more results" (if exists)
+        # click on "Show more results" if it's there
         try:
             driver.find_element(By.CSS_SELECTOR, ".YstHxe input").click()
             time.sleep(3)
@@ -62,10 +66,10 @@ def fetch_images(query: str, num: int, headless: bool):
 
         last_height = new_height
 
-    # Grab all of the images
+    # Grab all of the image thumbnails
     thumbnail_results = driver.find_elements(By.CLASS_NAME, 'rg_i')
-    fullsize_images = []
     print(f"Found {len(thumbnail_results)} potential images.")
+    fullsize_images = []
 
     # load the large version of each image and save it
     count = 0
@@ -79,14 +83,14 @@ def fetch_images(query: str, num: int, headless: bool):
             print(f"Loaded image #{count+1} of {num}: {full_image.get_attribute('src')}")
             count += 1
 
-        if count == len(thumbnail_results):
-            print(f"Couldn't get {num} images. Got {len(fullsize_images)} instead.")
-            break
         if count == num:
             break
 
+    if count < num:
+        print(f"Couldn't get {num} images. Got {len(fullsize_images)} instead.")
+
     driver.quit()
-    
+
     return fullsize_images
 
 
@@ -108,9 +112,9 @@ def save_images(image_links,  query: str, path: Path):
             image = Image.open(image_file).convert('RGB')
             with open(img_path, 'wb') as file:
                 image.save(file, "JPEG", quality=85)
-            print(f"Successfully saved img: {link} - as {img_path}")
+            print(f"Successfully saved img #{count+1} - as {img_path}")
 
         except Exception as e:
-            print(f"Error saving img: {link} - {e}")
+            print(f"Error saving img: #{count+1} - {e}")
 
         count += 1
