@@ -51,5 +51,5 @@ cat
 
 **Other Commands**
 - The `--path` argument will determine where the scraped images are saved.
-- Adding the `--no-headless` flag to the scrape command can increase the number of images found by the tool.
+- Add the `--no-headless` flag to turn off headless mode and view the scraper as it works.
 - Run `py image_gatherer.py --help` to get a list of all possible commands and options.
