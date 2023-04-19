@@ -6,18 +6,28 @@
 ##################################################################
 
 import sys
-import argparse
 from pathlib import Path
+import argparse
+from rich_argparse import RichHelpFormatter
+from rich.console import Console
 
 import webscraper
 import image_processor
+
+# fancy console
+console = Console()
+
+def close_app(msg: str):
+    """ Prints the message and closes the app. """
+    console.print(f'[red]{msg}\n')
+    sys.exit()
 
 def confirm_prompt(question: str) -> bool:
     """ Easy way to get confirmation from user. """
 
     reply = None
     while reply not in ("y", "n", "1", "2"):
-        reply = input(f"{question} (y/n): ").casefold()
+        reply = console.input(f"[yellow]{question} (y/n): ").casefold()
     return (reply == "y" or reply == "1")
 
 def sanitize_query(query: str):
@@ -47,22 +57,22 @@ def check_path(path: Path):
 
     if not path.exists() and path == Path('downloads'):
         path.mkdir(parents=True, exist_ok=True)
-        print("Created default path.")
+        console.print("Created default path.")
 
     elif not path.exists():
-        sys.exit(f'Provided path \"{path}\" doesn\'t exist.')
+        close_app(f'Provided path \"{path}\" doesn\'t exist.')
 
     elif not path.is_dir():
-        sys.exit('Provided path is not a directory.')
+        close_app('Provided path is not a directory.')
 
 def check_file(filepath: Path):
     """ Ensures the provided file exists and is a txt file """
 
     if not str(filepath).endswith('.txt'):
-        sys.exit("Batch file is not a txt file.")
+        close_app("Batch file is not a txt file.")
 
     if not Path(filepath).exists():
-        sys.exit(f'Provided file \"{filepath}\" doesn\'t exist.')
+        close_app(f'Provided file \"{filepath}\" doesn\'t exist.')
 
 def load_file(filepath: Path):
     """ Loads each line of a txt file into an array """
@@ -89,9 +99,9 @@ def scrape(args):
         check_file(args.batch)
         queries = load_file(args.batch)
 
-        print(f'About to scrape {len(queries)} queries from file: \"{args.batch}\". Files will be stored at: \"{path.resolve()}\"')
+        console.print(f'About to scrape {len(queries)} queries from file: \"{args.batch}\". Files will be stored at: \"{path.resolve()}\"')
         if not confirm_prompt("Proceed?"):
-            sys.exit('Closing image gatherer...')
+            close_app('Closing image gatherer...')
 
         for item in queries:
             # Create subdirectory for stored images
@@ -104,9 +114,9 @@ def scrape(args):
 
     # Do a single query if no batch file
     else:
-        print(f'About to scrape {num} images of \"{query}\". Files will be stored at: {path.resolve()}')
+        console.print(f'[b]About to scrape {num} images of \"{query}\". Files will be stored at: [yellow]{path.resolve()}')
         if not confirm_prompt("Proceed?"):
-            sys.exit('Closing image gatherer...')
+            close_app('Closing image gatherer...')
 
         query = sanitize_query(query)
 
@@ -126,11 +136,15 @@ def process(args):
 def main ():
     """ Entry point for the program. """
 
-    parser = argparse.ArgumentParser(description='Scrapes images from the web and prepares them for training ML algorithms')
+    parser = argparse.ArgumentParser(description='Scrapes images from the web and prepares them for training ML algorithms',
+                                     formatter_class=RichHelpFormatter)
     subparsers = parser.add_subparsers(dest='command')
 
     # webscraper commands
-    webscraper_parser = subparsers.add_parser('scrape', help="Scrape images from the web")
+    webscraper_parser = subparsers.add_parser('scrape', 
+                                              help="Scrape images from the web", 
+                                              formatter_class=RichHelpFormatter)
+    
     action = webscraper_parser.add_mutually_exclusive_group(required=True)
     action.add_argument('-q',
                         '--query',
@@ -165,7 +179,10 @@ def main ():
                                     default=True)
         
     # image processor commands
-    img_processor_parser = subparsers.add_parser('process', help='Process scraped images for better ML consumption.')
+    img_processor_parser = subparsers.add_parser('process', 
+                                                 help='Process scraped images for better ML consumption.', 
+                                                 formatter_class=RichHelpFormatter)
+    
     img_processor_parser.add_argument('-t',
                                       '--test',
                                       type=str,
