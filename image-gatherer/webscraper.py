@@ -23,7 +23,7 @@ config = configparser.ConfigParser()
 config.read_file(open(config_file + '/env.cfg', 'r'))
 
 
-def fetch_images(query: str, num: int, headless: bool):
+def fetch_images(query: str, num: int, arg_options):
     """ Fetches a number of image links from google images based on a provided query. """
 
     URL = f"https://www.google.com/search?site=&tbm=isch&source=hp&biw=1873&bih=990&q={query}"
@@ -31,14 +31,23 @@ def fetch_images(query: str, num: int, headless: bool):
     # Configure selenium chrome webdriver
     options = webdriver.ChromeOptions()
 
-    if (headless == True):
-        options.add_argument('--headless')
     options.add_argument('--incognito')
     options.add_argument('--no-sandbox')
     options.add_argument('--mute-audio')
     options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--log-level=3')
+
+    if (arg_options[0] == True):
+        options.add_argument('--headless')
+
+    if (arg_options[1] == False):
+        options.add_argument('--log-level=3')
+        options.add_experimental_option("excludeSwitches", ["enable-logging"])
+    else:
+        options.add_argument('--log-level=1')
+
     driver = webdriver.Chrome(config['DEFAULT']['CHROMEDRIVER_PATH'], options=options)
+
+    console.print("[green]Webdriver loaded successfully.")
 
     # load google
     driver.get(URL)

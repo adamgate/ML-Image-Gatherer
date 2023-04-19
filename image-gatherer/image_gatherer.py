@@ -92,6 +92,7 @@ def scrape(args):
     num = args.num
     path = Path(args.path.strip("\\").strip("\"")) #Strip unwanted characters from path
     headless = args.headless
+    debug = args.debug
     check_path(path)
 
     # batch file, need multiple queries
@@ -124,7 +125,7 @@ def scrape(args):
         path = create_dir(path, query)
 
         # Let the webscraper do its thing
-        image_links = webscraper.fetch_images(query, num, headless)
+        image_links = webscraper.fetch_images(query, num, [headless, debug])
         webscraper.save_images(image_links, query, path)
 
 
@@ -177,6 +178,11 @@ def main ():
                                     action=argparse.BooleanOptionalAction,
                                     help='The mode the scraper runs in. Headless or real. Defaults to headless.',
                                     default=True)
+    
+    webscraper_parser.add_argument("--debug",
+                                   action=argparse.BooleanOptionalAction,
+                                   help="Enables debug logging.",
+                                   default=False)
         
     # image processor commands
     img_processor_parser = subparsers.add_parser('process', 
