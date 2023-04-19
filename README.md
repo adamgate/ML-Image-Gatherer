@@ -1,5 +1,5 @@
 # ML Image Gatherer
-A python CLI app that scrapes images from the web and prepares them for training image classification machine learning algorithms.
+A python CLI app that scrapes images from the web for training image classification machine learning algorithms.
 
 ---
 
