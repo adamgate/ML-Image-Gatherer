@@ -24,7 +24,7 @@ config.read_file(open(config_file + '/env.cfg', 'r'))
 
 
 def fetch_images(query: str, num: int, headless: bool):
-    """ Fetches <num> image links from google images based on a provided query. """
+    """ Fetches a number of image links from google images based on a provided query. """
 
     URL = f"https://www.google.com/search?site=&tbm=isch&source=hp&biw=1873&bih=990&q={query}"
 
@@ -46,12 +46,12 @@ def fetch_images(query: str, num: int, headless: bool):
 
     # scroll to the bottom of the page so many images load
     last_height = driver.execute_script('return document.body.scrollHeight')
-    with console.status("[green]Finding images from google...", spinner='bouncingBar') as status:
+    with console.status("[green]Finding images from google...", spinner='bouncingBar', ) as status:
         while True:
             driver.execute_script('window.scrollTo(0,document.body.scrollHeight)')
 
             # If it isn't loading many images, increase this number
-            time.sleep(3)
+            time.sleep(1.5)
 
             new_height = driver.execute_script('return document.body.scrollHeight')
 
@@ -75,14 +75,13 @@ def fetch_images(query: str, num: int, headless: bool):
 
     # load the large version of each image and save it
     count = 0
-    for thumbnail in track(thumbnail_results, total=num, description=f"Getting {num} images..."):
+    for thumbnail in track(thumbnail_results, total=num, description=f"[yellow]Getting {num} images..."):
         thumbnail.click()
         time.sleep(1)
 
         full_image = driver.find_element(By.CLASS_NAME, 'r48jcc')
         if full_image.get_attribute('src') and 'http' in full_image.get_attribute('src'):
             fullsize_images.append(full_image.get_attribute('src'))
-            # console.print(f"Loaded image #{count+1} of {num}: {full_image.get_attribute('src')}")
             count += 1
 
         if count == num:
@@ -100,7 +99,7 @@ def save_images(image_links,  query: str, path: Path):
     """ Loads image links into images and saves them to the provided path.  """
 
     count = 0
-    for link in track(image_links, total=len(image_links), description=f"Saving {len(image_links)} images..."):
+    for link in track(image_links, total=len(image_links), description=f"[yellow]Saving {len(image_links)} images..."):
         img_path = f"{path}/{query}{count+1}.jpg"
 
         try:

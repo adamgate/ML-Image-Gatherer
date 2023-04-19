@@ -19,7 +19,7 @@ console = Console()
 
 def close_app(msg: str):
     """ Prints the message and closes the app. """
-    console.print(f'[red]{msg}')
+    console.print(f'[red]{msg}\n')
     sys.exit()
 
 def confirm_prompt(question: str) -> bool:
@@ -114,7 +114,7 @@ def scrape(args):
 
     # Do a single query if no batch file
     else:
-        console.print(f'About to scrape {num} images of \"{query}\". Files will be stored at: {path.resolve()}')
+        console.print(f'[b]About to scrape {num} images of \"{query}\". Files will be stored at: [yellow]{path.resolve()}')
         if not confirm_prompt("Proceed?"):
             close_app('Closing image gatherer...')
 
