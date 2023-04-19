@@ -16,7 +16,7 @@ If you wish to run this yourself, follow the steps below:
 CHROMEDRIVER_PATH = <PATH_TO_CHROME_WEBDRIVER_HERE>
 ```
 
-5. Insert the path to the chrome webdriver you installed in the file.
+5. Replace the angle brackets with the path to where you installed the chrome webdriver.
 
 That should be all you need to do to get the program up and running.
 

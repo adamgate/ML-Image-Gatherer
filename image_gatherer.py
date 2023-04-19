@@ -7,6 +7,9 @@
 
 import sys
 from pathlib import Path
+import threading
+import concurrent.futures
+
 import argparse
 from rich_argparse import RichHelpFormatter
 from rich.console import Console
@@ -90,8 +93,19 @@ def load_file(filepath: Path):
     
     return queries
 
+def scrape(query, path, num, arg_options):
+    # Create subdirectory for stored images
+    query = sanitize_query(query)
+    new_path = create_dir(path, query)
 
-def main ():
+    # Let the webscraper do its thing
+    driver = webscraper.initialize_webdriver(arg_options)
+    image_links = webscraper.fetch_images(query, num, driver)
+    webscraper.save_images(image_links, query, new_path)
+    return
+
+
+def main():
     """ Entry point for the program. """
 
     parser = argparse.ArgumentParser(description='Scrapes images from the web for training image classification ML algorithms',
@@ -116,7 +130,7 @@ def main ():
                         type=int, 
                         help='The number of images to fetch, from 1-400. Defaults to 10.', 
                         choices=range(1,401),
-                        metavar='[1-400]', 
+                        metavar='[# of images]', 
                         default=10)
     
     parser.add_argument('-p',
@@ -125,6 +139,13 @@ def main ():
                         help='The path where the images will be saved. Defaults to ./downloads',
                         metavar='[path]',
                         default='downloads')
+    
+    parser.add_argument('-t',
+                        '--threads',
+                        type=int,
+                        help='The number of concurrent processes to run. Only works with the batch argument.',
+                        metavar='[# of threads]',
+                        default=1)
     
     parser.add_argument('--headless',
                         action=argparse.BooleanOptionalAction,
@@ -139,7 +160,6 @@ def main ():
     
     args = parser.parse_args()
 
-    query = args.query
     num = args.num
     path = Path(args.path.strip("\\").strip("\"")) # Strip unwanted characters from path
     arg_options = [args.headless, args.debug] # optional flags
@@ -151,36 +171,32 @@ def main ():
         check_file(args.batch)
         queries = load_file(args.batch)
 
-        console.print(f'About to scrape {len(queries)} queries from file: \"{args.batch}\". Files will be stored at: \"{path.resolve()}\"')
+        console.print(f'About to scrape {num} images for each of {len(queries)} queries found in file: \"{args.batch}\". Images will be stored at: \"{path.resolve()}\"')
         if not confirm_prompt("Proceed?"):
             close_app('Closing image gatherer...')
 
-        for item in queries:
-            # Create subdirectory for stored images
-            item = sanitize_query(item)
-            new_path = create_dir(path, item)
+        # Keep a pool of <X> threads and move to the next query when a thread is finished
+        threads = args.threads
+        worker_pool = concurrent.futures.ThreadPoolExecutor(max_workers=threads)
+        results = []
+        try:
+            for query in queries:
+                results.append(worker_pool.submit(scrape, query, path, num, arg_options))
 
-            # Let the webscraper do its thing
-            driver = webscraper.initialize_webdriver(arg_options)
-            image_links = webscraper.fetch_images(item, num, driver)
-            webscraper.save_images(image_links, item, new_path)
-
+            worker_pool.shutdown(wait=True)
+            console.print('[blink green]All finished!')
+        except Exception as e:
+            console.print(e)
+            pass
+            
     # Do a single query if no batch file
     else:
+        query = args.query
         console.print(f'[b]About to scrape {num} images of \"{query}\". Files will be stored at: [yellow]{path.resolve()}')
         if not confirm_prompt("Proceed?"):
             close_app('Closing image gatherer...')
 
-
-        query = sanitize_query(query)
-
-        # Create subdirectory for stored images
-        path = create_dir(path, query)
-
-        # Let the webscraper do its thing
-        driver = webscraper.initialize_webdriver(arg_options)
-        image_links = webscraper.fetch_images(query, num, driver)
-        webscraper.save_images(image_links, query, path)
+        scrape(query, path, num, arg_options)
 
 if __name__ == '__main__':
     main()
