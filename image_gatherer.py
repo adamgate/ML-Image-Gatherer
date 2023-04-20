@@ -9,16 +9,29 @@ import sys
 from pathlib import Path
 import concurrent.futures
 
+import time
+from datetime import datetime
+
 import argparse
 from rich_argparse import RichHelpFormatter
 from rich.console import Console
 
 import webscraper
 
-# fancy console
+# fancy consoles
 console = Console()
+error_console = Console(stderr=True, style="bold red")
 
+# TODO- user flag that displays debug info or records it to a file
+# with open("report.txt", "wt") as report_file:
+#     erroronsole = Console(file=report_file)
+#     console.rule(f"Report Generated {datetime.now().ctime()}")
 
+########################################################
+#
+#                       UTILS
+#
+#########################################################
 def close_app(msg: str):
     """ Prints the message and closes the app. """
     console.print(f'[red]{msg}\n')
@@ -92,15 +105,29 @@ def load_file(filepath: Path):
     
     return queries
 
+########################################################
+#
+#                  CORE FUNCTIONS
+#
+#########################################################
 def scrape(query, path, num, arg_options):
+    """ Handles all the pieces necessary to scrape and store images """
+
     # Create subdirectory for stored images
     query = sanitize_query(query)
     new_path = create_dir(path, query)
 
     # Let the webscraper do its thing
     driver = webscraper.initialize_webdriver(arg_options)
+
     image_links = webscraper.fetch_images(query, num, driver)
+
+    if (image_links is None):
+        console.print(f'[red bold]Couldn\'t get images for {query}.')
+        return
+    
     webscraper.save_images(image_links, query, new_path)
+
 
 def main():
     """ Entry point for the program. """
@@ -108,7 +135,6 @@ def main():
     parser = argparse.ArgumentParser(description='Scrapes images from the web for training image classification ML algorithms',
                                      formatter_class=RichHelpFormatter)
 
-    # webscraper commands
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument('-q',
                         '--query',
@@ -119,9 +145,10 @@ def main():
     action.add_argument('-b',
                         '--batch',
                         type=str,
-                        help='Path to a txt file with a query on each line.',
-                        metavar='[path to batch txt file]')
+                        help='Path to a text file with a query on each line.',
+                        metavar='[path to file]')
 
+    # Options for --batch and --query
     parser.add_argument('-n',
                         '--num',
                         type=int, 
@@ -134,7 +161,7 @@ def main():
                         '--path',
                         type=str,
                         help='The path where the images will be saved. Defaults to ./downloads',
-                        metavar='[path]',
+                        metavar='[path to folder]',
                         default='downloads')
     
     parser.add_argument('-t',
@@ -143,7 +170,7 @@ def main():
                         help='The number of concurrent processes to run. Only works with --batch and not --query.',
                         choices=range(1,60),
                         metavar='[# of threads]',
-                        default=1)
+                        default=2)
     
     parser.add_argument('--headless',
                         action=argparse.BooleanOptionalAction,
@@ -168,11 +195,11 @@ def main():
         check_file(args.batch)
         queries = load_file(args.batch)
 
-        console.print(f'About to scrape {num} images for each of {len(queries)} queries found in file: \"{args.batch}\". Images will be stored at: \"{path.resolve()}\"')
+        console.print(f'About to scrape {num} images for each of {len(queries)} queries found in file: \"{args.batch}\". Images will be stored at: [yellow]\"{path.resolve()}\"')
         if not confirm_prompt("Proceed?"):
             close_app('Closing image gatherer...')
 
-        # Keep a pool of <X> threads and move to the next query when a thread is finished
+        # Keep a pool of <X> processes and move to the next query when a thread is finished
         worker_pool = concurrent.futures.ProcessPoolExecutor(max_workers=args.threads)
         results = []
         try:
@@ -180,7 +207,7 @@ def main():
                 results.append(worker_pool.submit(scrape, query, path, num, arg_options))
 
             worker_pool.shutdown(wait=True)
-            console.print('[blink green]Finished saving images for the full batch of queries!')
+            console.print('[blink bold green]Finished saving images for the full batch of queries.\n')
         except Exception as e:
             console.print(e)
             pass
@@ -193,6 +220,8 @@ def main():
             close_app('Closing image gatherer...')
             
         scrape(query, path, num, arg_options)
+        console.print('[blink bold green]Finished saving images for the query.\n')
+
 
 if __name__ == '__main__':
     main()

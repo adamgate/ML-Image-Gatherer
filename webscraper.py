@@ -7,15 +7,17 @@
 from pathlib import Path
 import configparser
 import time
-
+from datetime import datetime
 import io
+
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
 from rich.progress import track
 from PIL import Image
 
-from image_gatherer import console
+from image_gatherer import console, error_console, close_app
 
 # Load chromedriver for selenium
 config_file = str(Path('.').parent.absolute())
@@ -51,7 +53,7 @@ def fetch_images(query: str, num: int, driver):
 
     URL = f"https://www.google.com/search?site=&tbm=isch&source=hp&biw=1873&bih=990&q={query}"
 
-    # load google
+    # load google images
     driver.get(URL)
     time.sleep(3)
 
@@ -80,31 +82,59 @@ def fetch_images(query: str, num: int, driver):
             last_height = new_height
 
     # Grab all of the image thumbnails
-    thumbnail_results = driver.find_elements(By.CLASS_NAME, 'rg_i')
-    console.print(f"[magenta]Found {len(thumbnail_results)} potential images for \"{query}\".")
-    fullsize_images = []
+    for attempt in range(10):
+        try:
+            thumbnail_results = driver.find_elements(By.CLASS_NAME, 'rg_i')
+            console.print(f"[magenta]Found {len(thumbnail_results)} potential images for \"{query}\".")
+            fullsize_images = []
+            break
+        except ElementClickInterceptedException as e:
+            error_console.print(f'Error loading thumbnail results: - {e}')
+            time.sleep(1)
+            continue
+    # Retries failed. Report and close app
+    else:
+        driver.save_screenshot(f'error_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
+        driver.quit()
+        console.print(f'[bold red]Unable to load thumbnail results for \"{query}\"')
 
-    # load the large version of each image and save it
+
+    # load the large version of each image and keep track of src link
     count = 0
     console.print(f"[yellow][bold]Processing[/bold] {num} images of \"{query}\"...")
     for thumbnail in thumbnail_results:
         thumbnail.click()
         time.sleep(1)
 
-        full_image = driver.find_element(By.CLASS_NAME, 'r48jcc')
-        if full_image.get_attribute('src') and 'http' in full_image.get_attribute('src'):
-            fullsize_images.append(full_image.get_attribute('src'))
-            count += 1
+        # retry up to 10 times if the image loads slowly 
+        for attempt in range(10):
+            try:
+                full_image = driver.find_element(By.CLASS_NAME, 'r48jcc')
+                # Only save the image links, not the base64 encoded images
+                if full_image.get_attribute('src') and 'http' in full_image.get_attribute('src'):
+                    fullsize_images.append(full_image.get_attribute('src'))
+                    count += 1
+                break
+            except NoSuchElementException as e:
+                error_console.print(f'Error selecting image: - {e}')
+                time.sleep(1)
+                continue
+        # Retries failed. Report and close app
+        else:
+            driver.save_screenshot(f'error_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
+            driver.quit()
+            console.print(f'[bold red]Unable to select large images for \"{query}\"')
+            return
 
         if count == num:
             break
 
     if count < num:
-        console.print(f"[red]Couldn't get {num} images. Got {len(fullsize_images)} instead.")
+        console.print(f"[red]Couldn't get {num} images for \"{query}\". Got {len(fullsize_images)} instead.")
 
     driver.quit()
 
-    console.print(f'[green]Successfully [bold]processed[/bold] {num} images of {query}.')
+    console.print(f'[green]Successfully [bold]processed[/bold] {len(fullsize_images)} images of \"{query}\".')
     return fullsize_images
 
 
@@ -119,7 +149,7 @@ def save_images(image_links,  query: str, path: Path):
         try:
             image_content = requests.get(link).content
         except Exception as e:
-            # console.print(f"Error downloading image: {link} - {e}")
+            error_console.print(f"Error downloading image: {link} - {e}")
             pass
 
         try:
@@ -128,8 +158,8 @@ def save_images(image_links,  query: str, path: Path):
             with open(img_path, 'wb') as file:
                 image.save(file, "JPEG", quality=85)
         except Exception as e:
-            console.print(f"Error saving img: #{count+1} - {e}")
+            error_console.print(f"Error saving img: #{count+1} - {e}")
 
         count += 1
 
-    console.print(f'[green]Successfully [bold]saved[/bold] {count} images of {query}.')
+    console.print(f'[green]Successfully [bold]saved[/bold] {count} images of \"{query}\".')

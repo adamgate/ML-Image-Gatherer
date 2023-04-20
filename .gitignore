@@ -5,6 +5,7 @@ env/
 # Project specific ignores
 env.cfg
 downloads/
+*.png
 
 # Ignore all .txt files except for dependencies
 *.txt
