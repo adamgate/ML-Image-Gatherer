@@ -1,8 +1,6 @@
 # ML Image Gatherer
 A python CLI app that scrapes images from the web for training image classification machine learning algorithms.
 
----
-
 ## Setup
 If you wish to run this yourself, follow the steps below:
 
@@ -19,8 +17,6 @@ CHROMEDRIVER_PATH = <PATH_TO_CHROME_WEBDRIVER_HERE>
 5. Replace the angle brackets with the path to where you installed the chrome webdriver.
 
 That should be all you need to do to get the program up and running.
-
----
 
 ## Usage
 Here's an example of how to use the app.

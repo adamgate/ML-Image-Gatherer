@@ -30,7 +30,7 @@ def confirm_prompt(question: str) -> bool:
 
     reply = None
     while reply not in ("y", "n", "1", "2"):
-        reply = console.input(f"[bold yellow]{question} (y/n): ").casefold()
+        reply = console.input(f"[yellow]{question} (y/n): ").casefold()
     return (reply == "y" or reply == "1")
 
 
@@ -101,7 +101,6 @@ def scrape(query, path, num, arg_options):
     driver = webscraper.initialize_webdriver(arg_options)
     image_links = webscraper.fetch_images(query, num, driver)
     webscraper.save_images(image_links, query, new_path)
-    console.print(f'Finished downloading images for {query}')
 
 def main():
     """ Entry point for the program. """
@@ -192,7 +191,7 @@ def main():
         console.print(f'[b]About to scrape {num} images of \"{query}\". Files will be stored at: [yellow]{path.resolve()}')
         if not confirm_prompt("Proceed?"):
             close_app('Closing image gatherer...')
-
+            
         scrape(query, path, num, arg_options)
 
 if __name__ == '__main__':
