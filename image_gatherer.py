@@ -7,7 +7,6 @@
 
 import sys
 from pathlib import Path
-import threading
 import concurrent.futures
 
 import argparse
@@ -102,8 +101,7 @@ def scrape(query, path, num, arg_options):
     driver = webscraper.initialize_webdriver(arg_options)
     image_links = webscraper.fetch_images(query, num, driver)
     webscraper.save_images(image_links, query, new_path)
-    return
-
+    console.print(f'Finished downloading images for {query}')
 
 def main():
     """ Entry point for the program. """
@@ -143,7 +141,8 @@ def main():
     parser.add_argument('-t',
                         '--threads',
                         type=int,
-                        help='The number of concurrent processes to run. Only works with the batch argument.',
+                        help='The number of concurrent processes to run. Only works with --batch and not --query.',
+                        choices=range(1,60),
                         metavar='[# of threads]',
                         default=1)
     
@@ -163,7 +162,6 @@ def main():
     num = args.num
     path = Path(args.path.strip("\\").strip("\"")) # Strip unwanted characters from path
     arg_options = [args.headless, args.debug] # optional flags
-
     check_path(path)
 
     # batch file, need multiple queries
@@ -176,15 +174,14 @@ def main():
             close_app('Closing image gatherer...')
 
         # Keep a pool of <X> threads and move to the next query when a thread is finished
-        threads = args.threads
-        worker_pool = concurrent.futures.ThreadPoolExecutor(max_workers=threads)
+        worker_pool = concurrent.futures.ProcessPoolExecutor(max_workers=args.threads)
         results = []
         try:
             for query in queries:
                 results.append(worker_pool.submit(scrape, query, path, num, arg_options))
 
             worker_pool.shutdown(wait=True)
-            console.print('[blink green]All finished!')
+            console.print('[blink green]Finished saving images for the full batch of queries!')
         except Exception as e:
             console.print(e)
             pass

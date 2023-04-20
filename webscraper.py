@@ -56,29 +56,30 @@ def fetch_images(query: str, num: int, driver):
     driver.get(URL)
     time.sleep(3)
 
-    # scroll to the bottom of the page so many images load
-    last_height = driver.execute_script('return document.body.scrollHeight')
-    with console.status("[green]Finding images from google...", spinner='bouncingBar', ) as status:
-        while True:
-            driver.execute_script('window.scrollTo(0,document.body.scrollHeight)')
+    # scroll to the bottom of the page so many images load, if necessary
+    if (num > 35):
+        last_height = driver.execute_script('return document.body.scrollHeight')
+        with console.status("[green]Finding images from google...", spinner='bouncingBar', ) as status:
+            while True:
+                driver.execute_script('window.scrollTo(0,document.body.scrollHeight)')
 
-            # If it isn't loading many images, increase this number
-            time.sleep(1.5)
+                # If it isn't loading many images, increase this number
+                time.sleep(1.5)
 
-            new_height = driver.execute_script('return document.body.scrollHeight')
+                new_height = driver.execute_script('return document.body.scrollHeight')
 
-            # click on "Show more results" if it's there
-            try:
-                driver.find_element(By.CSS_SELECTOR, ".YstHxe input").click()
-                time.sleep(3)
-            except:
-                pass
+                # click on "Show more results" if it's there
+                try:
+                    driver.find_element(By.CSS_SELECTOR, ".YstHxe input").click()
+                    time.sleep(3)
+                except:
+                    pass
 
-            # checking if we have reached the bottom of the page
-            if new_height == last_height:
-                break
+                # checking if we have reached the bottom of the page
+                if new_height == last_height:
+                    break
 
-            last_height = new_height
+                last_height = new_height
 
     # Grab all of the image thumbnails
     thumbnail_results = driver.find_elements(By.CLASS_NAME, 'rg_i')

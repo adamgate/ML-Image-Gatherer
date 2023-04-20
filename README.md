@@ -51,6 +51,7 @@ cat
 
 **Other Commands**
 - The `--path` argument will determine where the scraped images are saved.
+- When using `--batch`, add the `--threads` argument to set the number of queries that are scraped concurrently.
 - Add the `--no-headless` flag to turn off headless mode and view the scraper as it works.
 - Add the `--debug` flag to enable debug logging.
 - Run `py image_gatherer.py --help` to get a list of all possible commands and options.
