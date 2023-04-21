@@ -17,7 +17,7 @@ from selenium.common.exceptions import NoSuchElementException, ElementClickInter
 from rich.progress import track
 from PIL import Image
 
-from image_gatherer import console, error_console, close_app
+from image_gatherer import console, error_console
 
 # Load chromedriver for selenium
 config_file = str(Path('.').parent.absolute())
@@ -86,7 +86,6 @@ def fetch_images(query: str, num: int, driver):
         try:
             thumbnail_results = driver.find_elements(By.CLASS_NAME, 'rg_i')
             console.print(f"[magenta]Found {len(thumbnail_results)} potential images for \"{query}\".")
-            fullsize_images = []
             break
         except ElementClickInterceptedException as e:
             error_console.print(f'Error loading thumbnail results: - {e}')
@@ -94,12 +93,13 @@ def fetch_images(query: str, num: int, driver):
             continue
     # Retries failed. Report and close app
     else:
-        driver.save_screenshot(f'error_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
+        driver.save_screenshot(f'debug/ERROR_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
         driver.quit()
         console.print(f'[bold red]Unable to load thumbnail results for \"{query}\"')
 
 
     # load the large version of each image and keep track of src link
+    fullsize_images = []
     count = 0
     console.print(f"[yellow][bold]Processing[/bold] {num} images of \"{query}\"...")
     for thumbnail in thumbnail_results:
@@ -121,7 +121,7 @@ def fetch_images(query: str, num: int, driver):
                 continue
         # Retries failed. Report and close app
         else:
-            driver.save_screenshot(f'error_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
+            driver.save_screenshot(f'debug/ERROR_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
             driver.quit()
             console.print(f'[bold red]Unable to select large images for \"{query}\"')
             return
@@ -158,7 +158,7 @@ def save_images(image_links,  query: str, path: Path):
             with open(img_path, 'wb') as file:
                 image.save(file, "JPEG", quality=85)
         except Exception as e:
-            error_console.print(f"Error saving img: #{count+1} - {e}")
+            error_console.print(f"Error saving img: #{count+1} for {query} - {e}")
 
         count += 1
 

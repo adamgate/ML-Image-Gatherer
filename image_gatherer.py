@@ -8,7 +8,6 @@
 import sys
 from pathlib import Path
 import concurrent.futures
-
 import time
 from datetime import datetime
 
@@ -22,14 +21,9 @@ import webscraper
 console = Console()
 error_console = Console(stderr=True, style="bold red")
 
-# TODO- user flag that displays debug info or records it to a file
-# with open("report.txt", "wt") as report_file:
-#     erroronsole = Console(file=report_file)
-#     console.rule(f"Report Generated {datetime.now().ctime()}")
-
 ########################################################
 #
-#                       UTILS
+#                   UTIL FUNCTIONS
 #
 #########################################################
 def close_app(msg: str):
@@ -74,9 +68,9 @@ def create_dir(path: Path, query: str):
 def check_path(path: Path):
     """ Ensures the provided path is valid, or creates the default path if no path was provided. """
 
-    if not path.exists() and path == Path('downloads'):
+    if not path.exists() and (path == Path('downloads') or path == Path('debug')):
         path.mkdir(parents=True, exist_ok=True)
-        console.print("Created default path.")
+        console.print(f"Created folder {path}.")
 
     elif not path.exists():
         close_app(f'Provided path \"{path}\" doesn\'t exist.')
@@ -188,14 +182,27 @@ def main():
     num = args.num
     path = Path(args.path.strip("\\").strip("\"")) # Strip unwanted characters from path
     arg_options = [args.headless, args.debug] # optional flags
+
+    # Check user provided path
     check_path(path)
+
+    # Create debug folder
+    check_path(Path('debug'))
+
+    # output errors to log file unless --debug is set
+    if args.debug is False:
+        sys.stderr = open(f'debug/report_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}.txt', 'w+')
+        error_console.print(f"Report Generated {datetime.now().ctime()}")
 
     # batch file, need multiple queries
     if args.batch is not None:
         check_file(args.batch)
         queries = load_file(args.batch)
 
-        console.print(f'About to scrape {num} images for each of {len(queries)} queries found in file: \"{args.batch}\". Images will be stored at: [yellow]\"{path.resolve()}\"')
+        console.print()
+        console.print(f'About to scrape {num} images for each of {len(queries)} queries found in file: \"{args.batch}\".')
+        console.print(f'Images will be stored at: [yellow]\"{path.resolve()}\"')
+        console.print(f'{args.threads} queries will be scraped at a time.')
         if not confirm_prompt("Proceed?"):
             close_app('Closing image gatherer...')
 
@@ -207,7 +214,7 @@ def main():
                 results.append(worker_pool.submit(scrape, query, path, num, arg_options))
 
             worker_pool.shutdown(wait=True)
-            console.print('[blink bold green]Finished saving images for the full batch of queries.\n')
+            console.print('[bold green]Finished saving images for the full batch of queries.\n')
         except Exception as e:
             console.print(e)
             pass
@@ -220,7 +227,11 @@ def main():
             close_app('Closing image gatherer...')
             
         scrape(query, path, num, arg_options)
-        console.print('[blink bold green]Finished saving images for the query.\n')
+        console.print('[bold green]Finished saving images for the query.\n')
+
+    # Close debug file
+    sys.stderr.close()
+
 
 
 if __name__ == '__main__':

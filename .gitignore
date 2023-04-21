@@ -1,12 +1,17 @@
+###########################
 # Python specific ignores
+###########################
 env/
 **/__pycache__
 
+###########################
 # Project specific ignores
+###########################
 env.cfg
 downloads/
+debug/
 *.png
 
 # Ignore all .txt files except for dependencies
-*.txt
+*.txt 
 !requirements.txt
