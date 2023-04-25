@@ -158,7 +158,7 @@ def save_images(image_links,  query: str, path: Path):
             with open(img_path, 'wb') as file:
                 image.save(file, "JPEG", quality=85)
         except Exception as e:
-            error_console.print(f"Error saving img: #{count+1} for {query} - {e}")
+            error_console.print(f"Error saving img: #{count+1} for \"{query}\" - {e}")
 
         count += 1
 

@@ -119,7 +119,11 @@ def scrape(query, path, num, arg_options):
     if (image_links is None):
         console.print(f'[red bold]Couldn\'t get images for {query}.')
         return
-    
+    try:
+        driver.quit()
+    except Exception as e:
+        print(e)
+
     webscraper.save_images(image_links, query, new_path)
 
 
@@ -214,7 +218,9 @@ def main():
                 results.append(worker_pool.submit(scrape, query, path, num, arg_options))
 
             worker_pool.shutdown(wait=True)
-            console.print('[bold green]Finished saving images for the full batch of queries.\n')
+            console.print('[bold green]*****************************************************')
+            console.print('[bold green]Finished saving images for the full batch of queries.')
+            console.print('[bold green]*****************************************************')
         except Exception as e:
             console.print(e)
             pass
