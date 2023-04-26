@@ -8,8 +8,9 @@
 import sys
 from pathlib import Path
 import concurrent.futures
-import time
 from datetime import datetime
+import time
+import requests
 
 import argparse
 from rich_argparse import RichHelpFormatter
@@ -104,6 +105,21 @@ def load_file(filepath: Path):
 #                  CORE FUNCTIONS
 #
 #########################################################
+def check_connection():
+    """ Checks that the app can connect to the internet and google """
+    try:
+        response = requests.get('https://www.google.com')
+
+        if (response.status_code == 200):
+            console.print('[green]Successfully connected to Google.')
+            return
+        else:
+            close_app(f'There was an issue connecting to Google - \"{response.status_code}\"')
+            
+    except Exception as e:
+        close_app(f'Unable to connect to the internet - {e}')
+
+
 def scrape(query, path, num, arg_options):
     """ Handles all the pieces necessary to scrape and store images """
 
@@ -187,6 +203,9 @@ def main():
     path = Path(args.path.strip("\\").strip("\"")) # Strip unwanted characters from path
     arg_options = [args.headless, args.debug] # optional flags
 
+    # ensure internet & google are working
+    check_connection()
+
     # Check user provided path
     check_path(path)
 
@@ -203,7 +222,6 @@ def main():
         check_file(args.batch)
         queries = load_file(args.batch)
 
-        console.print()
         console.print(f'About to scrape {num} images for each of {len(queries)} queries found in file: \"{args.batch}\".')
         console.print(f'Images will be stored at: [yellow]\"{path.resolve()}\"')
         console.print(f'{args.threads} queries will be scraped at a time.')

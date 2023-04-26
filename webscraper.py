@@ -7,7 +7,6 @@
 from pathlib import Path
 import configparser
 import time
-from datetime import datetime
 import io
 
 import requests
