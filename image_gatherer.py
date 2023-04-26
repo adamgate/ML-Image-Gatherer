@@ -115,9 +115,9 @@ def check_connection():
     except Exception as e:
         close_app(f'Unable to connect to the internet - {e}')
 
-########################################################
+#########################################################
 #
-#                  CORE FUNCTIONS
+#                    CORE FUNCTIONS
 #
 #########################################################
 def scrape(query, path, num, arg_options):

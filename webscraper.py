@@ -32,6 +32,8 @@ def initialize_webdriver(arg_options):
     options.add_argument('--no-sandbox')
     options.add_argument('--mute-audio')
     options.add_argument('--disable-dev-shm-usage')
+    #Custom User Agent to satisfy Wikimedia request requirements
+    # options.add_argument('--user-agent=MLGatherer/1.0 (https://github.com/adamgate/ML-Image-Gatherer)')
 
     # headless flag
     if (arg_options[0] == True):
@@ -87,7 +89,7 @@ def fetch_images(query: str, num: int, driver):
             console.print(f"[magenta]Found {len(thumbnail_results)} potential images for \"{query}\".")
             break
         except ElementClickInterceptedException as e:
-            error_console.print(f'Error loading thumbnail results: - {e}')
+            error_console.print(f'Error loading thumbnail results for \"{query}\"- Attempt {attempt}/10')
             time.sleep(1)
             continue
     # Retries failed. Report and close app
@@ -137,6 +139,7 @@ def fetch_images(query: str, num: int, driver):
     return fullsize_images
 
 
+
 def save_images(image_links,  query: str, path: Path):
     """ Loads image links into images and saves them to the provided path.  """
 
@@ -146,26 +149,33 @@ def save_images(image_links,  query: str, path: Path):
     for link in image_links:
         img_path = f"{path}/{query}{count+1}.jpg"
 
-        try:
-            image_content = requests.get(link).content
-        except Exception as e:
-            error_console.print(f"Error downloading image: {link} - {e}")
+        for attempt in range(10):
+            try:
+                image_content = requests.get(link).content
+            except Exception as e:
+                error_console.print(f"Error downloading image: {link} - {e}")
 
-        try:
-            image_file = io.BytesIO(image_content)
-            image = Image.open(image_file).convert('RGB')
-            with open(img_path, 'wb') as file:
-                image.save(file, "JPEG", quality=85)
-            successful_saves += 1
-        except Exception as e:
-            error_console.print(f"Image #{count+1} for \"{query}\" link: {image_links[count]}")
-            error_console.print(f"Error saving img: #{count+1} for \"{query}\" - {e}")
+            try:
+                image_file = io.BytesIO(image_content)
+                image = Image.open(image_file).convert('RGB')
+                with open(img_path, 'wb') as file:
+                    image.save(file, "JPEG", quality=85)
+                successful_saves += 1
+                break
+            except Exception as e:
+                error_console.print(f"Image #{count+1} for \"{query}\" link: {image_links[count]}")
+                error_console.print(f"Error saving image #{count+1} for \"{query}\" - {e}")
+                continue
 
         count += 1
+
+    else:
+        # add debug stuff here
+        pass
 
     if (successful_saves == len(image_links)):
         console.print(f'[green]Successfully [bold]saved[/bold] {successful_saves}/{count} images of \"{query}\".')
     elif (successful_saves == 0):
         error_console.print(f'Unable to save any images for \"{query}\"')
     else:
-        console.print(f'[orange]Only able to [bold]save[/bold] {successful_saves}/{count} images of \"query\"')
+        console.print(f'[orange]Only able to [bold]save[/bold] {successful_saves}/{count} images of \"{query}\"')
