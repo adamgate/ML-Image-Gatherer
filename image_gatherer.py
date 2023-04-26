@@ -20,7 +20,7 @@ import webscraper
 
 # fancy consoles
 console = Console()
-error_console = Console(stderr=True, style="bold red")
+error_console = Console(style="bold red")
 
 ########################################################
 #
@@ -100,13 +100,9 @@ def load_file(filepath: Path):
     
     return queries
 
-########################################################
-#
-#                  CORE FUNCTIONS
-#
-#########################################################
 def check_connection():
     """ Checks that the app can connect to the internet and google """
+
     try:
         response = requests.get('https://www.google.com')
 
@@ -119,7 +115,11 @@ def check_connection():
     except Exception as e:
         close_app(f'Unable to connect to the internet - {e}')
 
-
+########################################################
+#
+#                  CORE FUNCTIONS
+#
+#########################################################
 def scrape(query, path, num, arg_options):
     """ Handles all the pieces necessary to scrape and store images """
 
@@ -174,7 +174,7 @@ def main():
     parser.add_argument('-p',
                         '--path',
                         type=str,
-                        help='The path where the images will be saved. Defaults to ./downloads',
+                        help='The path where the images will be saved. Defaults to /downloads',
                         metavar='[path to folder]',
                         default='downloads')
     
@@ -211,11 +211,6 @@ def main():
 
     # Create debug folder
     check_path(Path('debug'))
-
-    # output errors to log file unless --debug is set
-    if args.debug is False:
-        sys.stderr = open(f'debug/report_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}.txt', 'w+')
-        error_console.print(f"Report Generated {datetime.now().ctime()}")
 
     # batch file, need multiple queries
     if args.batch is not None:
@@ -255,7 +250,6 @@ def main():
 
     # Close debug file
     sys.stderr.close()
-
 
 
 if __name__ == '__main__':

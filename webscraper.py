@@ -94,7 +94,7 @@ def fetch_images(query: str, num: int, driver):
     else:
         driver.save_screenshot(f'debug/ERROR_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
         driver.quit()
-        console.print(f'[bold red]Unable to load thumbnail results for \"{query}\"')
+        error_console.print(f'Unable to load thumbnail results for \"{query}\"')
 
 
     # load the large version of each image and keep track of src link
@@ -122,14 +122,14 @@ def fetch_images(query: str, num: int, driver):
         else:
             driver.save_screenshot(f'debug/ERROR_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
             driver.quit()
-            console.print(f'[bold red]Unable to select large images for \"{query}\"')
+            error_console.print(f'Unable to select large images for \"{query}\"')
             return
 
         if count == num:
             break
 
     if count < num:
-        console.print(f"[red]Couldn't get {num} images for \"{query}\". Got {len(fullsize_images)} instead.")
+        console.print(f"[red]Couldn't find {num} acceptable images for \"{query}\". Got {len(fullsize_images)} instead.")
 
     driver.quit()
 
@@ -141,6 +141,7 @@ def save_images(image_links,  query: str, path: Path):
     """ Loads image links into images and saves them to the provided path.  """
 
     count = 0
+    successful_saves = 0
     console.print(f"[yellow][bold]Saving[/bold] {len(image_links)} images of \"{query}\"...")
     for link in image_links:
         img_path = f"{path}/{query}{count+1}.jpg"
@@ -149,16 +150,22 @@ def save_images(image_links,  query: str, path: Path):
             image_content = requests.get(link).content
         except Exception as e:
             error_console.print(f"Error downloading image: {link} - {e}")
-            pass
 
         try:
             image_file = io.BytesIO(image_content)
             image = Image.open(image_file).convert('RGB')
             with open(img_path, 'wb') as file:
                 image.save(file, "JPEG", quality=85)
+            successful_saves += 1
         except Exception as e:
+            error_console.print(f"Image #{count+1} for \"{query}\" link: {image_links[count]}")
             error_console.print(f"Error saving img: #{count+1} for \"{query}\" - {e}")
 
         count += 1
 
-    console.print(f'[green]Successfully [bold]saved[/bold] {count} images of \"{query}\".')
+    if (successful_saves == len(image_links)):
+        console.print(f'[green]Successfully [bold]saved[/bold] {successful_saves}/{count} images of \"{query}\".')
+    elif (successful_saves == 0):
+        error_console.print(f'Unable to save any images for \"{query}\"')
+    else:
+        console.print(f'[orange]Only able to [bold]save[/bold] {successful_saves}/{count} images of \"query\"')
