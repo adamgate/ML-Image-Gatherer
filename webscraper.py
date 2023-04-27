@@ -38,7 +38,7 @@ def initialize_webdriver(arg_options):
     options.add_argument('--no-sandbox')
     options.add_argument('--mute-audio')
     options.add_argument('--disable-dev-shm-usage')
-    options.add_argument(f'--user-agent={user_agents[1]}')
+    options.add_argument(f'--user-agent={arg_options[2]}')
 
     # headless flag
     if (arg_options[0] == True):

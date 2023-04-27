@@ -187,6 +187,12 @@ def main():
                         metavar='[# of threads]',
                         default=2)
     
+    parser.add_argument('--user-agent',
+                        type=str,
+                        help="User Agent used by Selenium.",
+                        metavar='[user agent]',
+                        default=webscraper.user_agents[0])
+    
     parser.add_argument('--headless',
                         action=argparse.BooleanOptionalAction,
                         help='The mode the scraper runs in. Headless or real. Defaults to headless.',
@@ -202,7 +208,7 @@ def main():
 
     num = args.num
     path = Path(args.path.strip("\\").strip("\"")) # Strip unwanted characters from path
-    arg_options = [args.headless, args.debug] # optional flags
+    arg_options = [args.headless, args.debug, args.user_agent] # optional flags
 
     # ensure internet & google are working
     check_connection()
