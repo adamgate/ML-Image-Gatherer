@@ -132,15 +132,16 @@ def scrape(query, path, num, arg_options):
 
     image_links = webscraper.fetch_images(query, num, driver)
 
-    if (image_links is None):
-        console.print(f'[red bold]Couldn\'t get images for {query}.')
-        return
     try:
         driver.quit()
     except Exception as e:
-        print(e)
+        pass
 
+    if (image_links is None or len(image_links) == 0):
+        return False
+    
     webscraper.save_images(image_links, query, new_path)
+    return True
 
 
 def main():
@@ -245,8 +246,11 @@ def main():
         if not confirm_prompt("Proceed?"):
             close_app('Closing image gatherer...')
             
-        scrape(query, path, num, arg_options)
-        console.print('[bold green]Finished saving images for the query.\n')
+        success = scrape(query, path, num, arg_options)
+        if (success):
+            console.print(f'[bold green]Finished saving images for the query \"{query}\".\n')
+        if (not success):
+            error_console.print(f'Unsuccessful in saving images for the query \"{query}\".\n')
 
     # Close debug file
     sys.stderr.close()

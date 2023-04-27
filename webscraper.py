@@ -18,6 +18,12 @@ from PIL import Image
 
 from image_gatherer import console, error_console
 
+# user agents
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36", # Windows 10 + chrome
+    "MLGatherer/1.0 (https://github.com/adamgate/ML-Image-Gatherer)"                                                   # custom bot user agent (usually rejected by google)
+]
+
 # Load chromedriver for selenium
 config_file = str(Path('.').parent.absolute())
 config = configparser.ConfigParser()
@@ -32,8 +38,7 @@ def initialize_webdriver(arg_options):
     options.add_argument('--no-sandbox')
     options.add_argument('--mute-audio')
     options.add_argument('--disable-dev-shm-usage')
-    #Custom User Agent to satisfy Wikimedia request requirements
-    # options.add_argument('--user-agent=MLGatherer/1.0 (https://github.com/adamgate/ML-Image-Gatherer)')
+    options.add_argument(f'--user-agent={user_agents[1]}')
 
     # headless flag
     if (arg_options[0] == True):
@@ -86,8 +91,14 @@ def fetch_images(query: str, num: int, driver):
     for attempt in range(10):
         try:
             thumbnail_results = driver.find_elements(By.CLASS_NAME, 'rg_i')
-            console.print(f"[magenta]Found {len(thumbnail_results)} potential images for \"{query}\".")
-            break
+
+            if (len(thumbnail_results) == 0):
+                error_console.print(f'Unable to load any potential images for \"{query}\".')
+                driver.save_screenshot(f'debug/ERROR_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
+                return
+            else:
+                console.print(f"[magenta]Found {len(thumbnail_results)} potential images for \"{query}\".")
+                break
         except ElementClickInterceptedException as e:
             error_console.print(f'Error loading thumbnail results for \"{query}\"- Attempt {attempt}/10')
             time.sleep(1)
@@ -95,9 +106,8 @@ def fetch_images(query: str, num: int, driver):
     # Retries failed. Report and close app
     else:
         driver.save_screenshot(f'debug/ERROR_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
-        driver.quit()
         error_console.print(f'Unable to load thumbnail results for \"{query}\"')
-
+        return
 
     # load the large version of each image and keep track of src link
     fullsize_images = []
@@ -123,20 +133,29 @@ def fetch_images(query: str, num: int, driver):
         # Retries failed. Report and close app
         else:
             driver.save_screenshot(f'debug/ERROR_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
-            driver.quit()
             error_console.print(f'Unable to select large images for \"{query}\"')
             return
 
         if count == num:
             break
 
-    if count < num:
-        console.print(f"[red]Couldn't find {num} acceptable images for \"{query}\". Got {len(fullsize_images)} instead.")
+    if count == 0:
+        error_console.print(f"Couldn't find any acceptable images for \"{query}\".")
+        driver.save_screenshot(f'debug/ERROR_{time.strftime("%Y-%m-%d_%I-%M-%S-%p")}_{query}.png')
+    elif count < num:
+        error_console.print(f"Couldn't find {num} acceptable images for \"{query}\". Got {len(fullsize_images)} instead.")
+    else:
+        console.print(f'[green]Successfully [bold]processed[/bold] {len(fullsize_images)} images of \"{query}\".')
 
     driver.quit()
 
-    console.print(f'[green]Successfully [bold]processed[/bold] {len(fullsize_images)} images of \"{query}\".')
     return fullsize_images
+
+
+def check_content(request_content):
+    """ Checks what type of content was returned from a request """
+    console.print(f'[cyan]Content type: {type(request_content)}')
+    pass
 
 
 
@@ -147,35 +166,32 @@ def save_images(image_links,  query: str, path: Path):
     successful_saves = 0
     console.print(f"[yellow][bold]Saving[/bold] {len(image_links)} images of \"{query}\"...")
     for link in image_links:
+
+        image_content = None
+        try:
+            image_content = requests.get(link).content
+        except Exception as e:
+            error_console.print(f"Error downloading image: {link} - {e}")
+            count += 1
+            continue
+
+        # TODO - handle more than just JPGs
         img_path = f"{path}/{query}{count+1}.jpg"
 
-        for attempt in range(10):
-            try:
-                image_content = requests.get(link).content
-            except Exception as e:
-                error_console.print(f"Error downloading image: {link} - {e}")
-
-            try:
-                image_file = io.BytesIO(image_content)
-                image = Image.open(image_file).convert('RGB')
-                with open(img_path, 'wb') as file:
-                    image.save(file, "JPEG", quality=85)
-                successful_saves += 1
-                break
-            except Exception as e:
-                error_console.print(f"Image #{count+1} for \"{query}\" link: {image_links[count]}")
-                error_console.print(f"Error saving image #{count+1} for \"{query}\" - {e}")
-                continue
+        try:
+            image_file = io.BytesIO(image_content)
+            image = Image.open(image_file).convert('RGB')
+            with open(img_path, 'wb') as file:
+                image.save(file, "JPEG", quality=85)
+            successful_saves += 1
+        except Exception as e:
+            error_console.print(f"Error saving image #{count+1} for \"{query}\".")
 
         count += 1
 
-    else:
-        # add debug stuff here
-        pass
-
-    if (successful_saves == len(image_links)):
-        console.print(f'[green]Successfully [bold]saved[/bold] {successful_saves}/{count} images of \"{query}\".')
-    elif (successful_saves == 0):
+    if (successful_saves == 0):
         error_console.print(f'Unable to save any images for \"{query}\"')
+    elif (successful_saves == len(image_links)):
+        console.print(f'[green]Successfully [bold]saved[/bold] {successful_saves}/{count} images of \"{query}\".')
     else:
-        console.print(f'[orange]Only able to [bold]save[/bold] {successful_saves}/{count} images of \"{query}\"')
+        console.print(f'[cyan]Only able to [bold]save[/bold] {successful_saves}/{count} images of \"{query}\"')
